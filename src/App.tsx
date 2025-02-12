@@ -3,11 +3,15 @@ import './App.css'
 import ProfileCard from './components/ProfileCard'
 import SearchBar from './components/SearchBar'
 import { IoMoon, IoSunny } from "react-icons/io5";
+import axios from 'axios';
 
 const App: React.FC = () => {
   const [theme, setTheme] = useState<"light" | "dark">(
     localStorage.getItem("theme") as "light" | "dark" || "light"
   )
+  const [username, setUsername] = useState<String>("");
+  const [profileData, setProfileData] = useState<any>("");
+  const [error, setError] = useState<String | null>(null);
 
   useEffect(() => {
     localStorage.setItem("theme", theme);
@@ -17,6 +21,18 @@ const App: React.FC = () => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
   };
 
+  const handleSearch = async () => {
+    if (username.trim() === '') return;
+    try {
+      const response = await axios.get(`https://api.github.com/users/${username}`);
+      setProfileData(response.data);
+      setError(null);
+    } catch (error) {
+      setError("No Record Found");
+      setProfileData(null)
+
+    }
+  }
 
   return (
     <div className={`flex flex-col w-full h-screen items-center transition-all duration-300 ${theme === "light" ? "bg-[#fafafa] text-[#212121]" : "bg-[#000000] text-[#fafafa]"}`}>
@@ -30,8 +46,9 @@ const App: React.FC = () => {
         </div>
       </div>
       <div className='flex flex-col justify-center items-center gap-6'>
-        <SearchBar theme={theme}/>
-        <ProfileCard theme={theme}/>
+        <SearchBar theme={theme} onSearch={handleSearch} setUsername={setUsername} />
+        {error && <p className="text-red-500">{error}</p>}
+        <ProfileCard theme={theme} profileData={profileData}/>
       </div>
     </div>
   )
